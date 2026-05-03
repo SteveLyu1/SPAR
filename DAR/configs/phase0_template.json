@@ -1,0 +1,45 @@
+{
+  "project_name": "dar_hate_phase0_simple_doc_format",
+  "seed": 20260415,
+  "paths": {
+    "state_train": "Datasets/STATE-ToxiCN-main/data/train.json",
+    "state_test": "Datasets/STATE-ToxiCN-main/data/test.json",
+    "tbo": "Datasets/TBO/TBO.json",
+    "output_root": "DAR/outputs/phase0"
+  },
+  "schema": {
+    "group_taxonomy": [
+      "Sexism",
+      "Racism",
+      "Region",
+      "LGBTQ",
+      "others",
+      "non-hate"
+    ],
+    "group_typo_map": {
+      "Sexis": "Sexism",
+      "Sexism ": "Sexism",
+      "Racism ": "Racism",
+      "Region ": "Region",
+      "LGBTQ ": "LGBTQ",
+      "others ": "others",
+      "non-hate ": "non-hate"
+    }
+  },
+  "split": {
+    "state_policy": "keep_original_train_test",
+    "tbo_train_size": 3200,
+    "tbo_test_size": 800
+  },
+  "runtime": {
+    "max_state_train_docs": null,
+    "max_state_test_docs": null,
+    "max_tbo_docs": null
+  },
+  "quality": {
+    "strict": false
+  },
+  "logging": {
+    "level": "INFO"
+  }
+}

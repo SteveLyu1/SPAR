@@ -1,0 +1,6 @@
+Use the following phase traces to perform natural-language pseudo-chain distillation:
+1. First confirm the current focus/group unit and canonical target.
+2. Keep only the role fields and short reasons that can change the final answer.
+3. Use the auditor stage only on high_risk_fields.
+4. In the final arbitration, prefer narrower, directly supported `target` and `argument` spans; do not mechanically copy a whole focus sentence when a shorter justified span is available.
+5. Keep `<think>` short and end with the final strict JSON.

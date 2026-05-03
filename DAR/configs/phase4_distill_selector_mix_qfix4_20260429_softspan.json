@@ -1,0 +1,192 @@
+{
+  "paths": {
+    "phase0_samples": "DAR/outputs/phase0/phase1_input_zhen_train_test_all.jsonl",
+    "phase1_candidates": "DAR/outputs/phase1/latest/candidates/all.jsonl",
+    "phase2_candidates": "DAR/outputs/phase2/latest/candidates/all_roles.jsonl",
+    "phase3_trace_pack": "DAR/outputs/phase3/phase3_full_nothink_qfix4_14b_20260428/candidates/phase4_trace_pack.jsonl",
+    "phase3_group_decisions": "DAR/outputs/phase3/phase3_full_nothink_qfix4_14b_20260428/candidates/group_decisions.jsonl",
+    "phase3_rectified_roles": "DAR/outputs/phase3/phase3_full_nothink_qfix4_14b_20260428/candidates/rectified_roles.jsonl",
+    "phase3_final_tuples": "DAR/outputs/phase3/phase3_full_nothink_qfix4_14b_20260428/candidates/final_tuples.jsonl",
+    "zh_lexicon_path": "Datasets/STATE-ToxiCN-main/data/annotated lexicon.json",
+    "output_root": "DAR/outputs/phase4_selector_mix",
+    "llamafactory_root": "LLaMA-Factory"
+  },
+  "runtime": {
+    "default_splits": [
+      "train",
+      "dev",
+      "test"
+    ],
+    "max_samples": 0
+  },
+  "phase4": {
+    "hard_case_only": false,
+    "hard_case_threshold": 0.67,
+    "include_think_tags": true,
+    "include_source_text_in_user_prompt": true,
+    "include_ground_truth_in_user_prompt": false,
+    "ground_truth_match_min_score": 3.0,
+    "include_lexicon_evidence": true,
+    "zh_lexicon_max_hits": 3,
+    "primary_variant_name": "stage2_bridge_hq",
+    "quality_selectors": {
+      "by_language_phase0_like": {
+        "zh": "DAR/outputs/phase2_policy/phase2_moderator_anchor_full_20260429/candidates/phase0_like.jsonl",
+        "en": "DAR/outputs/phase3.5/phase35_fullrun_from_phase3_qfix4_14b_20260428/candidates/phase0_like.jsonl"
+      }
+    },
+    "prompt_profiles": {
+      "zh_group_hateful": {
+        "match_languages": [
+          "zh"
+        ],
+        "match_sources": [
+          "STATE-ToxiCN"
+        ],
+        "assistant_chain_style": "danceha_compact_softspan",
+        "system_prompt_path": "DAR/prompts/phase4_system_prompt_zh_v2_softspan.txt",
+        "user_instruction_path": "DAR/prompts/phase4_user_instruction_zh_v2_softspan.txt"
+      },
+      "en_span_harmful": {
+        "match_languages": [
+          "en"
+        ],
+        "match_sources": [
+          "TBO"
+        ],
+        "assistant_chain_style": "danceha_compact_softspan",
+        "system_prompt_path": "DAR/prompts/phase4_system_prompt_en_v2_softspan.txt",
+        "user_instruction_path": "DAR/prompts/phase4_user_instruction_en_v2_softspan.txt"
+      }
+    },
+    "dataset_variants": [
+      {
+        "name": "legacy_full_teacher",
+        "description": "Legacy full-trace teacher-supervised dataset kept for backward compatibility.",
+        "filter_mode": "all",
+        "supervision_target": "teacher"
+      },
+      {
+        "name": "stage1_clean",
+        "description": "High-precision stage using language-specific external selector exact agreement with ground truth.",
+        "filter_mode": "external_selector_clean",
+        "supervision_target": "ground_truth_primary"
+      },
+      {
+        "name": "stage2_silver",
+        "description": "Expanded stage using language-specific external selector silver agreement with ground truth.",
+        "filter_mode": "external_selector_silver",
+        "supervision_target": "ground_truth_primary"
+      },
+      {
+        "name": "stage2_bridge_hq",
+        "description": "Expanded high-quality stage: selector silver plus language-aware teacher-to-ground-truth bridge rows with controlled conflict and no severe structural errors.",
+        "filter_mode": "selector_silver_teacher_bridge",
+        "supervision_target": "ground_truth_primary",
+        "bridge_require_same_label": true,
+        "bridge_require_any_teacher_fields": [
+          "same_group"
+        ],
+        "bridge_max_conflict_score": 0.67,
+        "bridge_max_conflict_by_language": {
+          "zh": 0.85,
+          "en": 0.67
+        },
+        "bridge_exclude_error_tags": [
+          "auditor_rejected",
+          "defective_role",
+          "missing_roles"
+        ]
+      }
+    ]
+  },
+  "prompts": {
+    "phase1": {
+      "en": "DAR/prompts/phase1_segmenter_prompt_en_fewshot.txt",
+      "zh": "DAR/prompts/phase1_segmenter_prompt_zh_fewshot.txt"
+    },
+    "phase2": {
+      "victim_en": "DAR/prompts/phase2_role_prompt_victim_en_v2.txt",
+      "victim_zh": "DAR/prompts/phase2_role_prompt_victim_zh_v2.txt",
+      "moderator_en": "DAR/prompts/phase2_role_prompt_moderator_en_v2.txt",
+      "moderator_zh": "DAR/prompts/phase2_role_prompt_moderator_zh_v2.txt",
+      "cultural_bystander_en": "DAR/prompts/phase2_role_prompt_cultural_bystander_en_v2.txt",
+      "cultural_bystander_zh": "DAR/prompts/phase2_role_prompt_cultural_bystander_zh_v2.txt"
+    },
+    "phase3": {
+      "dynamic_beacon": "DAR/prompts/phase3_auditor_prompt_v2_dynamic_beacon.txt",
+      "baseline": "DAR/prompts/phase3_auditor_prompt_v1.txt"
+    }
+  },
+  "training": {
+    "prepare_only": true,
+    "dataset_name_prefix": "dar_hate_phase4_selmix",
+    "template": "qwen3_nothink",
+    "cutoff_len": 4096,
+    "preprocessing_num_workers": 8,
+    "dataloader_num_workers": 4,
+    "logging_steps": 10,
+    "save_steps": 100,
+    "plot_loss": true,
+    "overwrite_output_dir": false,
+    "save_only_model": false,
+    "report_to": "none",
+    "per_device_train_batch_size": 1,
+    "per_device_eval_batch_size": 1,
+    "gradient_accumulation_steps": 8,
+    "learning_rate": 0.0002,
+    "num_train_epochs": 3.0,
+    "lr_scheduler_type": "cosine",
+    "warmup_ratio": 0.1,
+    "bf16": true,
+    "ddp_timeout": 180000000,
+    "eval_strategy": "steps",
+    "eval_steps": 100,
+    "student_presets": {
+      "qwen3_4b_zh": {
+        "model_name_or_path": "Qwen/Qwen3-4B-Instruct-2507",
+        "template": "qwen3_nothink",
+        "language": "zh"
+      },
+      "qwen3_4b_en": {
+        "model_name_or_path": "Qwen/Qwen3-4B-Instruct-2507",
+        "template": "qwen3_nothink",
+        "language": "en"
+      }
+    },
+    "curriculum": [
+      {
+        "stage_name": "stage1_clean",
+        "dataset_variant": "stage1_clean",
+        "num_train_epochs": 1.0
+      },
+      {
+        "stage_name": "stage2_silver",
+        "dataset_variant": "stage2_bridge_hq",
+        "num_train_epochs": 2.0,
+        "continue_from_previous_adapter": true,
+        "create_new_adapter": false
+      }
+    ],
+    "lora": {
+      "finetuning_type": "lora",
+      "lora_rank": 32,
+      "lora_alpha": 32,
+      "lora_dropout": 0.0,
+      "lora_target": "all"
+    },
+    "qlora": {
+      "finetuning_type": "lora",
+      "quantization_bit": 4,
+      "quantization_method": "bnb",
+      "double_quantization": false,
+      "lora_rank": 32,
+      "lora_alpha": 32,
+      "lora_dropout": 0.0,
+      "lora_target": "all"
+    }
+  },
+  "quality": {
+    "strict": false
+  }
+}

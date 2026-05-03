@@ -1,0 +1,240 @@
+{
+  "paths": {
+    "phase0_samples": "DAR/outputs/phase0/phase1_input_zhen_train_test_all.jsonl",
+    "phase1_candidates": "DAR/outputs/phase1/latest/candidates/all.jsonl",
+    "phase2_candidates": "DAR/outputs/phase2/latest/candidates/all_roles.jsonl",
+    "phase3_trace_pack": "DAR/outputs/phase3/phase3_full_nothink_qfix4_14b_20260428/candidates/phase4_trace_pack.jsonl",
+    "phase3_group_decisions": "DAR/outputs/phase3/phase3_full_nothink_qfix4_14b_20260428/candidates/group_decisions.jsonl",
+    "phase3_rectified_roles": "DAR/outputs/phase3/phase3_full_nothink_qfix4_14b_20260428/candidates/rectified_roles.jsonl",
+    "phase3_final_tuples": "DAR/outputs/phase3/phase3_full_nothink_qfix4_14b_20260428/candidates/final_tuples.jsonl",
+    "zh_lexicon_path": "Datasets/STATE-ToxiCN-main/data/annotated lexicon.json",
+    "output_root": "DAR/outputs/phase4_teacher_distill",
+    "llamafactory_root": "LLaMA-Factory"
+  },
+  "runtime": {
+    "default_splits": [
+      "train"
+    ],
+    "max_samples": 0
+  },
+  "protocol": {
+    "name": "phase4_teacher_distill_v2_expanded_hq",
+    "plan_path": "DAR/docs/phase4_teacher_distill_plan_20260429.md",
+    "training_supervision": "teacher_only",
+    "approved_eval_protocols": [
+      "teacher_reasoning",
+      "teacher_json"
+    ],
+    "disallow_eval_prefill": true,
+    "notes": [
+      "Train on train split only.",
+      "Do not use ground truth as assistant supervision.",
+      "Use a strict HQ warm-up stage, then expanded HQ reasoning, then JSON-only alignment.",
+      "Do not use manual prefill_text in evaluation unless an explicit debugging exception is approved."
+    ]
+  },
+  "phase4": {
+    "hard_case_only": false,
+    "hard_case_threshold": 0.67,
+    "include_think_tags": true,
+    "include_source_text_in_user_prompt": true,
+    "include_ground_truth_in_user_prompt": false,
+    "ground_truth_match_min_score": 3.0,
+    "include_lexicon_evidence": true,
+    "zh_lexicon_max_hits": 3,
+    "primary_variant_name": "teacher_trace_reasoning_hq",
+    "prompt_profiles": {
+      "zh_group_hateful": {
+        "match_languages": [
+          "zh"
+        ],
+        "match_sources": [
+          "STATE-ToxiCN"
+        ],
+        "assistant_chain_style": "danceha_natural",
+        "system_prompt_path": "DAR/prompts/phase4_system_prompt_zh_v1.txt",
+        "user_instruction_path": "DAR/prompts/phase4_user_instruction_zh_v1.txt"
+      },
+      "en_span_harmful": {
+        "match_languages": [
+          "en"
+        ],
+        "match_sources": [
+          "TBO"
+        ],
+        "assistant_chain_style": "danceha_natural",
+        "system_prompt_path": "DAR/prompts/phase4_system_prompt_en_v1.txt",
+        "user_instruction_path": "DAR/prompts/phase4_user_instruction_en_v1.txt"
+      }
+    },
+    "dataset_variants": [
+      {
+        "name": "teacher_trace_reasoning_hq",
+        "description": "Strict high-quality teacher reasoning warm-up with short natural pseudo-chain plus final JSON.",
+        "filter_mode": "teacher_trace_hq",
+        "supervision_target": "teacher",
+        "include_think_tags": true,
+        "teacher_min_audit_confidence": 0.8,
+        "teacher_min_support_roles": 2,
+        "teacher_require_grounded_target": true,
+        "teacher_require_grounded_argument": true,
+        "teacher_max_conflict_score": 0.67,
+        "teacher_max_conflict_by_language": {
+          "zh": 0.85,
+          "en": 0.67
+        },
+        "teacher_exclude_error_tags": [
+          "auditor_rejected",
+          "defective_role",
+          "missing_roles"
+        ]
+      },
+      {
+        "name": "teacher_trace_reasoning_plus",
+        "description": "Expanded high-quality teacher reasoning stage that keeps grounded but harder consensus-break cases.",
+        "filter_mode": "teacher_trace_hq",
+        "supervision_target": "teacher",
+        "include_think_tags": true,
+        "teacher_min_audit_confidence": 0.8,
+        "teacher_min_support_roles": 2,
+        "teacher_require_grounded_target": true,
+        "teacher_require_grounded_argument": true,
+        "teacher_max_conflict_score": 0.85,
+        "teacher_max_conflict_by_language": {
+          "zh": 0.9,
+          "en": 0.85
+        },
+        "teacher_exclude_error_tags": [
+          "auditor_rejected",
+          "defective_role",
+          "missing_roles"
+        ]
+      },
+      {
+        "name": "teacher_trace_jsononly_plus",
+        "description": "Expanded high-quality final alignment stage with strict final JSON supervision only.",
+        "filter_mode": "teacher_trace_hq",
+        "supervision_target": "teacher",
+        "include_think_tags": false,
+        "teacher_min_audit_confidence": 0.8,
+        "teacher_min_support_roles": 2,
+        "teacher_require_grounded_target": true,
+        "teacher_require_grounded_argument": true,
+        "teacher_max_conflict_score": 0.85,
+        "teacher_max_conflict_by_language": {
+          "zh": 0.9,
+          "en": 0.85
+        },
+        "teacher_exclude_error_tags": [
+          "auditor_rejected",
+          "defective_role",
+          "missing_roles"
+        ],
+        "system_prompt_append_by_task_profile": {
+          "zh_group_hateful": "最终阶段要求：不要输出<think>，只输出最终严格 JSON。",
+          "en_span_harmful": "Final-stage requirement: do not output <think>; return the final strict JSON only."
+        },
+        "user_instruction_append_by_task_profile": {
+          "zh_group_hateful": "最终阶段要求：省略<think>，只保留最终严格 JSON。",
+          "en_span_harmful": "Final-stage requirement: omit <think> and keep only the final strict JSON."
+        }
+      }
+    ]
+  },
+  "prompts": {
+    "phase1": {
+      "en": "DAR/prompts/phase1_segmenter_prompt_en_fewshot.txt",
+      "zh": "DAR/prompts/phase1_segmenter_prompt_zh_fewshot.txt"
+    },
+    "phase2": {
+      "victim_en": "DAR/prompts/phase2_role_prompt_victim_en_v2.txt",
+      "victim_zh": "DAR/prompts/phase2_role_prompt_victim_zh_v2.txt",
+      "moderator_en": "DAR/prompts/phase2_role_prompt_moderator_en_v2.txt",
+      "moderator_zh": "DAR/prompts/phase2_role_prompt_moderator_zh_v2.txt",
+      "cultural_bystander_en": "DAR/prompts/phase2_role_prompt_cultural_bystander_en_v2.txt",
+      "cultural_bystander_zh": "DAR/prompts/phase2_role_prompt_cultural_bystander_zh_v2.txt"
+    },
+    "phase3": {
+      "dynamic_beacon": "DAR/prompts/phase3_auditor_prompt_v2_dynamic_beacon.txt",
+      "baseline": "DAR/prompts/phase3_auditor_prompt_v1.txt"
+    }
+  },
+  "training": {
+    "prepare_only": true,
+    "dataset_name_prefix": "dar_hate_phase4_teacher_qfix6",
+    "template": "qwen3_nothink",
+    "cutoff_len": 4096,
+    "preprocessing_num_workers": 8,
+    "dataloader_num_workers": 4,
+    "logging_steps": 10,
+    "save_steps": 100,
+    "plot_loss": true,
+    "overwrite_output_dir": false,
+    "save_only_model": false,
+    "report_to": "none",
+    "per_device_train_batch_size": 1,
+    "per_device_eval_batch_size": 1,
+    "gradient_accumulation_steps": 8,
+    "learning_rate": 0.0001,
+    "num_train_epochs": 1.0,
+    "lr_scheduler_type": "cosine",
+    "warmup_ratio": 0.05,
+    "bf16": true,
+    "ddp_timeout": 180000000,
+    "eval_strategy": "steps",
+    "eval_steps": 100,
+    "student_presets": {
+      "qwen3_4b_zh": {
+        "model_name_or_path": "Qwen/Qwen3-4B-Instruct-2507",
+        "template": "qwen3_nothink",
+        "language": "zh"
+      },
+      "qwen3_4b_en": {
+        "model_name_or_path": "Qwen/Qwen3-4B-Instruct-2507",
+        "template": "qwen3_nothink",
+        "language": "en"
+      }
+    },
+    "curriculum": [
+      {
+        "stage_name": "teacher_reasoning_hq",
+        "dataset_variant": "teacher_trace_reasoning_hq",
+        "num_train_epochs": 1.0
+      },
+      {
+        "stage_name": "teacher_reasoning_plus",
+        "dataset_variant": "teacher_trace_reasoning_plus",
+        "num_train_epochs": 1.0,
+        "continue_from_previous_adapter": true,
+        "create_new_adapter": false
+      },
+      {
+        "stage_name": "teacher_jsononly_plus",
+        "dataset_variant": "teacher_trace_jsononly_plus",
+        "num_train_epochs": 1.0,
+        "continue_from_previous_adapter": true,
+        "create_new_adapter": false
+      }
+    ],
+    "lora": {
+      "finetuning_type": "lora",
+      "lora_rank": 32,
+      "lora_alpha": 32,
+      "lora_dropout": 0.0,
+      "lora_target": "all"
+    },
+    "qlora": {
+      "finetuning_type": "lora",
+      "quantization_bit": 4,
+      "quantization_method": "bnb",
+      "double_quantization": false,
+      "lora_rank": 32,
+      "lora_alpha": 32,
+      "lora_dropout": 0.0,
+      "lora_target": "all"
+    }
+  },
+  "quality": {
+    "strict": true
+  }
+}

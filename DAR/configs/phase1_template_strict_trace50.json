@@ -1,0 +1,79 @@
+{
+  "project_name": "dar_hate_phase1",
+  "seed": 20260403,
+  "paths": {
+    "input_jsonl": "DAR/outputs/phase0/cleaned_zh_train.jsonl",
+    "output_root": "DAR/outputs/phase1",
+    "runs_root": "DAR/outputs/phase1/runs",
+    "model_root": "/usr/2Tusr/llm",
+    "segmenter_model_path": "/usr/2Tusr/llm/Qwen3-14B",
+    "segmenter_prompt_path": "DAR/prompts/phase1_segmenter_prompt_v2_lang_source_fewshot.txt",
+    "segmenter_prompt_path_zh": "DAR/prompts/phase1_segmenter_prompt_zh_fewshot.txt",
+    "segmenter_prompt_path_en": "DAR/prompts/phase1_segmenter_prompt_en_fewshot.txt"
+  },
+  "segmenter": {
+    "mode": "qwen_local",
+    "prompt_version": "phase1_segmenter_v3_bilingual_trainfewshot",
+    "hint_mode": "train_only",
+    "max_parse_retries": 3,
+    "max_repair_retries": 1,
+    "confidence_threshold": 0.72,
+    "split_multi_target_sentence": true,
+    "split_multi_intent_sentence": true,
+    "merge_adjacent_groups": true,
+    "allow_qwen_fallback_to_heuristic": false
+  },
+  "inference": {
+    "max_new_tokens": 896,
+    "max_input_tokens": 2048,
+    "batch_size": 4,
+    "min_batch_size": 1,
+    "max_batch_size": 6,
+    "auto_batch_shrink": true,
+    "auto_batch_grow": true,
+    "batch_grow_interval": 3,
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "top_k": 20,
+    "repetition_penalty": 1.0,
+    "enable_thinking": false,
+    "dtype": "float16",
+    "device_map": "balanced",
+    "require_cuda": true,
+    "prefer_4090_order": true,
+    "force_4090_order": false,
+    "preferred_gpu_mem_ratio": 0.97,
+    "other_gpu_mem_ratio": 0.9,
+    "min_multi_gpu_mem_ratio": 0.85,
+    "load_in_8bit_prefer": false,
+    "use_cache": true
+  },
+  "runtime": {
+    "default_splits": [
+      "train",
+      "test"
+    ],
+    "language_split_inputs": {
+      "zh_train": "DAR/outputs/phase0/cleaned_zh_train.jsonl",
+      "zh_test": "DAR/outputs/phase0/cleaned_zh_test.jsonl",
+      "en_train": "DAR/outputs/phase0/cleaned_en_train.jsonl",
+      "en_test": "DAR/outputs/phase0/cleaned_en_test.jsonl"
+    },
+    "require_language_split_inputs": true,
+    "max_samples": null,
+    "candidate_output_profile": "compact",
+    "progress_interval": 1,
+    "checkpoint_interval_rows": 50,
+    "resume_from_checkpoint": true
+  },
+  "quality": {
+    "strict": true,
+    "require_no_model_parse_fail": true,
+    "require_no_fallback_when_qwen": true,
+    "require_no_group_text_mismatch": true,
+    "max_group_text_mismatch_per_sample": 0
+  },
+  "logging": {
+    "level": "INFO"
+  }
+}

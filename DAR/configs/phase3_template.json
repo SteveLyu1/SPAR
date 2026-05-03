@@ -1,0 +1,77 @@
+{
+  "project_name": "dar_hate_phase3",
+  "seed": 20260409,
+  "paths": {
+    "input_jsonl": "DAR/outputs/phase2/latest/candidates/all_roles.jsonl",
+    "output_root": "DAR/outputs/phase3",
+    "model_root": "/usr/2Tusr/llm",
+    "assist_model_path": "/usr/2Tusr/llm/Qwen3-14B",
+    "assist_model_candidates": [
+      "/usr/2Tusr/llm/Qwen3-14B",
+      "/usr/2Tusr/llm/Qwen3.5-9B",
+      "/usr/2Tusr/llm/Qwen3-8B",
+      "/usr/2Tusr/llm/Qwen3.5-35B-A3B-FP8"
+    ],
+    "decision_prompt_path": "DAR/prompts/phase3_auditor_prompt_v1.txt"
+  },
+  "phase3": {
+    "mode": "rule_only",
+    "prompt_version": "phase3_decision_engine_v1",
+    "expected_roles": [
+      "victim",
+      "moderator",
+      "cultural_bystander"
+    ],
+    "confidence_threshold": 0.8,
+    "veto_threshold": 0.8,
+    "disagreement_high_threshold": 0.67,
+    "disagreement_medium_threshold": 0.34,
+    "enable_model_assist": false,
+    "model_assist_on_high_risk_only": true,
+    "model_assist_risk_threshold": 0.67,
+    "disable_rectification": false,
+    "max_parse_retries": 1,
+    "allow_model_fallback_to_rule": true,
+    "action_allowlist": [
+      "reject_hypothesis",
+      "revise_group",
+      "revise_harmful",
+      "keep_candidate"
+    ],
+    "error_tag_allowlist": [
+      "implicit_target_miss",
+      "cultural_metaphor_sarcasm_misread",
+      "group_boundary_error",
+      "harmful_over_under_estimation",
+      "reasoning_leap"
+    ]
+  },
+  "inference": {
+    "max_new_tokens": 512,
+    "temperature": 0.0,
+    "top_p": 0.9,
+    "dtype": "float16",
+    "device_map": "balanced",
+    "require_cuda": true,
+    "prefer_4090_order": true,
+    "force_4090_order": false,
+    "preferred_gpu_mem_ratio": 0.97,
+    "other_gpu_mem_ratio": 0.25,
+    "use_cache": false
+  },
+  "runtime": {
+    "default_splits": [
+      "train",
+      "dev",
+      "test"
+    ],
+    "max_samples": null,
+    "progress_interval": 200
+  },
+  "quality": {
+    "strict": false
+  },
+  "logging": {
+    "level": "INFO"
+  }
+}

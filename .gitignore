@@ -1,0 +1,66 @@
+# Default: ignore everything at repo root. Re-include only the code artifacts
+# that should be published for the DAR experiment implementation.
+/*
+
+# Git metadata helper
+!.gitignore
+!.gitattributes
+
+# Keep the DAR source tree, but ignore its heavy/generated subtrees below.
+!DAR/
+!DAR/**
+
+# Project-level docs/scripts worth publishing
+!emnlp_dar_hate_baseline.md
+!phase0_review_qwen.py
+
+# Exclude generated artifacts, data, and local environment clutter.
+.DS_Store
+__pycache__/
+*.py[cod]
+*.so
+*.dylib
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.venv/
+venv/
+
+# Exclude non-source top-level directories.
+/.vscode/
+/.claude/
+/.cleanup_backups/
+/.recovered_copilot_20260402/
+/Datasets/
+/Essays/
+/LLaMA-Factory/
+/Referred Projects/
+/llm_files/
+
+# Exclude transient top-level files.
+/.phase2_pid
+/.phase2_run_id
+/.phase3_post_phase2_validation_pid
+/*.log
+
+# Ignore DAR generated data, outputs, logs, tests with sample data, and caches.
+/DAR/logs/
+/DAR/outputs/
+/DAR/tests/
+/DAR/evaluation/
+/DAR/experiments/pycdc/
+/DAR/**/__pycache__/
+/DAR/**/*.pyc
+/DAR/*.log
+
+# Ignore evaluation / result related scripts and documents even outside DAR/evaluation.
+/DAR/fine_tuning/eval_phase4_generation.py
+/DAR/fine_tuning/run_phase4_official_eval.py
+/DAR/scripts/run_qwen35_comparison.py
+/DAR/docs/phase4_teacher_distill_plan_20260429.md
+/DAR/configs/phase4_teacher_evalpack_qfix6_20260430.json
+
+# Ignore nested git repositories or vendored repos inside DAR.
+/DAR/experiments/pycdc/.git/
