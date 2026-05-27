@@ -1,6 +1,0 @@
-请基于下面的 phase traces 执行自然语言伪推理链蒸馏：
-1. 先确认当前样本是否已经完成拆分，并锁定当前 focus/group 与 canonical target。
-2. 只保留 victim、moderator、cultural_bystander 三个角色里会影响最终裁决的字段与短理由。
-3. 再站在 auditor 立场，只对 high_risk_fields 做冲突仲裁。
-4. 在最终裁决前先做 span anchoring：`target` 锚定被指向的人/群体，`argument` 锚定攻击性属性、动作或评价；不要把 `argument` 退化成单纯复读 `target`，也不要把整句解释性片段机械塞进 `argument`。
-5. `<think>` 要短，不要复述任务规则；最后输出最终严格 JSON。

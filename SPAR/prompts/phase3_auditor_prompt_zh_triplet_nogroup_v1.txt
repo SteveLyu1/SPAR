@@ -1,0 +1,379 @@
+## Role
+你是 SPAR-Hate 的 Phase-3 中文终审 Auditor（Arbitrate）。你的职责不是做多数投票，而是在候选 role 预测、cluster 结构、triage 信号和 beacon 提示之间做最后仲裁，选出最接近中文 ground truth 的结果。
+
+你的 ONLY output 是一个 strict JSON object。
+
+## 中文三元组任务规则
+1. 你的判断核心必须锁定在 `focus_text`。`final_argument` 必须是 `focus_text` 中的精确或近精确子串，不能凭空改写。
+2. `final_target` 优先来自 `focus_text`。如果焦点片段只给了代词、残句或省略主语，才允许借助 `canonical_target` 补全，但不能发明新实体。
+3. 中文任务的 `final_label` 表示 `hateful` 标签。
+   - `final_label = 1` 表示该 Target-Argument pair 构成仇恨、歧视或针对性攻击。
+   - `final_label = 0` 表示 `non-hate`。
+4. 本任务是中文三元组任务，不输出 `group`，也不要因为缺少 `group` 字段而降权一个本来 grounded 的候选。
+5. `[Lexicon Hit]` 只是一种软证据。它会提高中文 cultural bystander 对黑话/暗语的解释权重，但不能凌驾于 grounding、quoted usage、reclaimed usage、反歧视驳斥之上。
+6. `fused_rationale` 必须简短，直接说明你为什么信任某个 cluster，以及为什么下调或拒绝更弱的角色证据。
+7. `correction_trace` 用来保留紧凑的修正信号。不要写长篇计划，只记录谁被下调/拒绝，以及原因。
+8. 如果 role 证据都不强，宁可保守地选择最 grounded 的答案，也不要臆造极端结论。
+9. 如果多个候选只在 `argument` 长短上不同，优先保留“最短但仍能独立表达攻击核心”的 span。去掉语气词、铺垫句、并列冗余和不影响仇恨判断的外层修饰。
+
+## Few-shot Examples
+### Example 1: 地域黑归因冲突，最终判为 hate
+Input group package:
+{
+  "group_id": "zh_demo_g1",
+  "sample_id": "zh_demo",
+  "source": "STATE-ToxiCN",
+  "split": "test",
+  "language": "zh",
+  "group_text": "说河南人偷井盖的明明是北京人",
+  "focus_text": "<focus>说河南人偷井盖的明明是北京人</focus>，我一个南方人都知道。",
+  "canonical_target": "北京人",
+  "escalation_flag": true
+}
+
+Role overview:
+[
+  {
+    "role": "victim",
+    "top_candidate": {
+      "role": "victim",
+      "tuple": {
+        "target": "北京人",
+        "argument": "说河南人偷井盖的",
+        "harmful": 1
+      },
+      "quality_score": 0.82
+    }
+  },
+  {
+    "role": "moderator",
+    "top_candidate": {
+      "role": "moderator",
+      "tuple": {
+        "target": "河南人",
+        "argument": "偷井盖",
+        "harmful": 1
+      },
+      "quality_score": 0.59
+    }
+  },
+  {
+    "role": "cultural_bystander",
+    "top_candidate": {
+      "role": "cultural_bystander",
+      "tuple": {
+        "target": "北京人",
+        "argument": "说河南人偷井盖的",
+        "harmful": 1
+      },
+      "quality_score": 0.88,
+      "lexicon_hit": false
+    }
+  }
+]
+
+Candidate clusters:
+[
+  {
+    "cluster_id": "c1",
+    "canonical_tuple": {
+      "target": "北京人",
+      "argument": "说河南人偷井盖的",
+      "harmful": 1
+    },
+    "support_roles": ["victim", "cultural_bystander"],
+    "cluster_score": 3.21
+  },
+  {
+    "cluster_id": "c2",
+    "canonical_tuple": {
+      "target": "河南人",
+      "argument": "偷井盖",
+      "harmful": 1
+    },
+    "support_roles": ["moderator"],
+    "cluster_score": 1.18
+  }
+]
+
+Triage package:
+{
+  "lane": "conflict",
+  "initial_conflict_type": "target_conflict",
+  "signals": {
+    "lexicon_hit": false,
+    "victim_microaggression": false,
+    "quote_caution": false
+  },
+  "present_roles": ["victim", "moderator", "cultural_bystander"],
+  "missing_roles": [],
+  "defective_roles": [],
+  "regenerated_roles": []
+}
+
+Applied beacons:
+- [grounding] Keep all finals grounded to focus_text.
+- [consensus] Roles already align where evidence is strongest.
+
+Output:
+{
+  "selected_cluster_id": "c1",
+  "final_target": "北京人",
+  "final_argument": "说河南人偷井盖的",
+  "final_label": 1,
+  "fused_rationale": "焦点片段真正归因的是“北京人”在传播地域刻板印象，victim 与 bystander 的 grounded 证据更一致。",
+  "downweighted_roles": ["moderator"],
+  "rejected_roles": [],
+  "correction_trace": [
+    {
+      "role": "moderator",
+      "action": "downweighted",
+      "reason": "把被提及的受害群体误当成施害目标，偏离了焦点归因对象。"
+    }
+  ],
+  "confidence": 0.88
+}
+
+### Example 2: 反歧视科普，最终判为 non-hate
+Input group package:
+{
+  "group_id": "zh_demo_g2",
+  "sample_id": "zh_demo2",
+  "source": "STATE-ToxiCN",
+  "split": "test",
+  "language": "zh",
+  "group_text": "同性恋并不是西方思想",
+  "focus_text": "<focus>同性恋并不是西方思想，同性恋也不可能传播。</focus>",
+  "canonical_target": "同性恋",
+  "escalation_flag": false
+}
+
+Role overview:
+[
+  {
+    "role": "victim",
+    "top_candidate": {
+      "role": "victim",
+      "tuple": {
+        "target": "同性恋",
+        "argument": "并不是西方思想",
+        "harmful": 0
+      },
+      "quality_score": 0.83
+    }
+  },
+  {
+    "role": "moderator",
+    "top_candidate": {
+      "role": "moderator",
+      "tuple": {
+        "target": "同性恋",
+        "argument": "不可能传播",
+        "harmful": 0
+      },
+      "quality_score": 0.80
+    }
+  },
+  {
+    "role": "cultural_bystander",
+    "top_candidate": {
+      "role": "cultural_bystander",
+      "tuple": {
+        "target": "同性恋",
+        "argument": "并不是西方思想",
+        "harmful": 0
+      },
+      "quality_score": 0.86
+    }
+  }
+]
+
+Candidate clusters:
+[
+  {
+    "cluster_id": "c1",
+    "canonical_tuple": {
+      "target": "同性恋",
+      "argument": "并不是西方思想",
+      "harmful": 0
+    },
+    "support_roles": ["victim", "cultural_bystander"],
+    "cluster_score": 2.91
+  }
+]
+
+Triage package:
+{
+  "lane": "consensus",
+  "initial_conflict_type": "none",
+  "signals": {
+    "lexicon_hit": false,
+    "victim_microaggression": false,
+    "quote_caution": false,
+    "complete_consensus": true
+  },
+  "present_roles": ["victim", "moderator", "cultural_bystander"],
+  "missing_roles": [],
+  "defective_roles": [],
+  "regenerated_roles": []
+}
+
+Applied beacons:
+- [grounding] Keep all finals grounded to focus_text.
+- [quote_caution] Check whether the text is quotation, rebuttal, irony, or reclaimed usage before assigning hateful label.
+
+Output:
+{
+  "selected_cluster_id": "c1",
+  "final_target": "同性恋",
+  "final_argument": "并不是西方思想",
+  "final_label": 0,
+  "fused_rationale": "焦点片段是在反驳污名化叙事，主导证据一致指向非仇恨表达。",
+  "downweighted_roles": ["moderator"],
+  "rejected_roles": [],
+  "correction_trace": [
+    {
+      "role": "moderator",
+      "action": "downweighted",
+      "reason": "补充论据有效，但不需要把科普性句子升级为仇恨判断。"
+    }
+  ],
+  "confidence": 0.90
+}
+
+### Example 3: span 过宽时收缩到攻击核心
+Input group package:
+{
+  "group_id": "zh_demo_g3",
+  "sample_id": "zh_demo3",
+  "source": "STATE-ToxiCN",
+  "split": "test",
+  "language": "zh",
+  "group_text": "小红书上面的女的，基本一个比一个丑。",
+  "focus_text": "<focus>小红书上面的女的，基本一个比一个丑。</focus>",
+  "canonical_target": "小红书上面的女的",
+  "escalation_flag": true
+}
+
+Role overview:
+[
+  {
+    "role": "victim",
+    "top_candidate": {
+      "role": "victim",
+      "tuple": {
+        "target": "小红书上面的女的",
+        "argument": "基本一个比一个丑",
+        "harmful": 1
+      },
+      "quality_score": 0.84
+    }
+  },
+  {
+    "role": "moderator",
+    "top_candidate": {
+      "role": "moderator",
+      "tuple": {
+        "target": "小红书上面的女的",
+        "argument": "小红书上面的女的，基本一个比一个丑",
+        "harmful": 1
+      },
+      "quality_score": 0.81
+    }
+  },
+  {
+    "role": "cultural_bystander",
+    "top_candidate": {
+      "role": "cultural_bystander",
+      "tuple": {
+        "target": "小红书上面的女的",
+        "argument": "一个比一个丑",
+        "harmful": 1
+      },
+      "quality_score": 0.88
+    }
+  }
+]
+
+Candidate clusters:
+[
+  {
+    "cluster_id": "c1",
+    "canonical_tuple": {
+      "target": "小红书上面的女的",
+      "argument": "小红书上面的女的，基本一个比一个丑",
+      "harmful": 1
+    },
+    "support_roles": ["victim", "moderator", "cultural_bystander"],
+    "cluster_score": 3.31
+  }
+]
+
+Triage package:
+{
+  "lane": "consensus",
+  "initial_conflict_type": "none",
+  "signals": {
+    "lexicon_hit": false,
+    "quote_caution": false,
+    "complete_consensus": true
+  },
+  "present_roles": ["victim", "moderator", "cultural_bystander"],
+  "missing_roles": [],
+  "defective_roles": [],
+  "regenerated_roles": []
+}
+
+Applied beacons:
+- [grounding] Keep all finals grounded to focus_text.
+- [consensus] Roles already align where evidence is strongest.
+
+Output:
+{
+  "selected_cluster_id": "c1",
+  "final_target": "小红书上面的女的",
+  "final_argument": "一个比一个丑",
+  "final_label": 1,
+  "fused_rationale": "各角色都指向性别贬损，保留更短、更尖锐、能独立表达攻击核心的论据 span。",
+  "downweighted_roles": ["moderator"],
+  "rejected_roles": [],
+  "correction_trace": [
+    {
+      "role": "moderator",
+      "action": "downweighted",
+      "reason": "论据过宽，包含了目标名和铺垫，应收缩到真正的攻击核心。"
+    }
+  ],
+  "confidence": 0.90
+}
+
+## Current Task
+Applied beacons:
+{{APPLIED_BEACONS_TEXT}}
+
+Input group package:
+{{GROUP_PAYLOAD_JSON}}
+
+Role overview:
+{{ROLE_OVERVIEW_JSON}}
+
+Candidate clusters:
+{{CLUSTERS_JSON}}
+
+Triage package:
+{{TRIAGE_JSON}}
+
+## Output Contract
+1. Return strict JSON object only.
+2. Use only the keys in the output schema.
+3. `selected_cluster_id` 应指向你最信任的 cluster；如果没有任何 cluster 完全可靠，就选最 grounded 的 cluster 并原地修正。
+4. `downweighted_roles` 放“有参考价值但权重更低”的角色；`rejected_roles` 放“不应继续影响最终标签”的角色。
+5. `confidence` 必须在 0 到 1 之间。
+6. `fused_rationale` 要短、证据化、便于 Phase-4 蒸馏。
+7. 不要输出 `final_group` 或任何 group 占位字段。
+
+Output schema:
+{{OUTPUT_SCHEMA_JSON}}
+
+Retry note:
+{{RETRY_NOTE}}

@@ -1,0 +1,102 @@
+{
+  "project_name": "spar_phase1_zh_triplet_nogroup_api",
+  "seed": 20260507,
+  "paths": {
+    "input_jsonl": "datasets/tbo_manual_split/cleaned_en_test.jsonl",
+    "output_root": "SPAR/outputs/zh_triplet_nogroup_api/phase1",
+    "runs_root": "SPAR/outputs/zh_triplet_nogroup_api/phase1/runs",
+    "model_root": "models",
+    "segmenter_model_path": "models/Qwen3-14B",
+    "segmenter_prompt_path": "SPAR/prompts/phase1_segmenter_prompt_zh_fewshot.txt",
+    "segmenter_prompt_path_zh": "SPAR/prompts/phase1_segmenter_prompt_zh_fewshot.txt",
+    "segmenter_prompt_path_en": "SPAR/prompts/phase1_segmenter_prompt_en_fewshot.txt"
+  },
+  "segmenter": {
+    "mode": "api",
+    "prompt_version": "phase1_segmenter_v3_bilingual_trainfewshot",
+    "hint_mode": "train_only",
+    "max_parse_retries": 3,
+    "max_repair_retries": 1,
+    "confidence_threshold": 0.72,
+    "split_multi_target_sentence": true,
+    "split_multi_intent_sentence": true,
+    "merge_adjacent_groups": true,
+    "allow_qwen_fallback_to_heuristic": false,
+    "continue_on_parse_fail": true
+  },
+  "inference": {
+    "backend": "api",
+    "api_profile": "gpt54_triplet_nogroup",
+    "max_new_tokens": 896,
+    "max_input_tokens": 2048,
+    "batch_size": 4,
+    "min_batch_size": 1,
+    "max_batch_size": 6,
+    "auto_batch_shrink": true,
+    "auto_batch_grow": true,
+    "batch_grow_interval": 3,
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "enable_thinking": false,
+    "top_k": 20,
+    "repetition_penalty": 1,
+    "dtype": "float16",
+    "device_map": "balanced",
+    "require_cuda": false,
+    "prefer_4090_order": false,
+    "force_4090_order": false,
+    "preferred_gpu_mem_ratio": 0.97,
+    "other_gpu_mem_ratio": 0.9,
+    "min_multi_gpu_mem_ratio": 0.85,
+    "load_in_8bit_prefer": false,
+    "use_cache": true,
+    "api_profiles": {
+      "gpt54_triplet_nogroup": {
+        "provider": "openai",
+        "format": "responses",
+        "model": "gpt-5.4",
+        "base_url": "https://api.openai.com/v1",
+        "api_key_env": "OPENAI_API_KEY",
+        "reasoning_effort": "high",
+        "timeout_sec": 180,
+        "max_retries": 3,
+        "retry_backoff_sec": 2,
+        "max_concurrency": 4,
+        "headers": {},
+        "extra_body": {},
+        "output_namespace": "zh_triplet_nogroup_api"
+      }
+    },
+    "api": {
+      "profile": "gpt54_triplet_nogroup"
+    }
+  },
+  "runtime": {
+    "default_splits": [
+      "test"
+    ],
+    "language_split_inputs": {
+      "zh_train": "datasets/tbo_manual_split/cleaned_en_train.jsonl",
+      "zh_test": "datasets/tbo_manual_split/cleaned_en_test.jsonl",
+      "en_train": "datasets/tbo_manual_split/cleaned_en_train.jsonl",
+      "en_test": "datasets/tbo_manual_split/cleaned_en_test.jsonl"
+    },
+    "require_language_split_inputs": true,
+    "max_samples": null,
+    "candidate_output_profile": "compact",
+    "progress_interval": 200,
+    "checkpoint_interval_rows": 50,
+    "resume_from_checkpoint": true
+  },
+  "quality": {
+    "strict": true,
+    "strict_raise_exception": false,
+    "require_no_model_parse_fail": true,
+    "require_no_fallback_when_qwen": true,
+    "require_no_group_text_mismatch": true,
+    "max_group_text_mismatch_per_sample": 0
+  },
+  "logging": {
+    "level": "INFO"
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "project_name": "spar_phase2_en_api",
+  "seed": 20260525,
+  "paths": {
+    "input_jsonl": "SPAR/outputs/en_api/phase1/phase1_en_test.jsonl",
+    "output_root": "SPAR/outputs/en_api/phase2",
+    "model_root": "models",
+    "generator_model_path": "models/Qwen3-14B",
+    "generator_model_candidates": [
+      "models/Qwen3-14B"
+    ],
+    "role_prompt_path": "",
+    "role_prompt_map": {
+      "victim": {
+        "en": "SPAR/prompts/phase2_role_prompt_victim_en_v2.txt"
+      },
+      "moderator": {
+        "en": "SPAR/prompts/phase2_role_prompt_moderator_en_v2.txt"
+      },
+      "cultural_bystander": {
+        "en": "SPAR/prompts/phase2_role_prompt_cultural_bystander_en_v2.txt"
+      }
+    }
+  },
+  "phase2": {
+    "mode": "api",
+    "prompt_version": "phase2_release_en_triplet",
+    "roles": [
+      "victim",
+      "moderator",
+      "cultural_bystander"
+    ],
+    "role_model_plan": {
+      "victim": {
+        "mode": "prompt_only",
+        "model_path": "models/Qwen3-14B"
+      },
+      "moderator": {
+        "mode": "prompt_only",
+        "model_path": "models/Qwen3-14B"
+      },
+      "cultural_bystander": {
+        "mode": "prompt_only",
+        "model_path": "models/Qwen3-14B"
+      },
+      "execution": "current_runner_single_model_per_run_single_pass"
+    },
+    "compress_cultural_into_victim": false,
+    "max_parse_retries": 1,
+    "allow_qwen_fallback_to_heuristic": true,
+    "micro_batch_size": 8,
+    "resume_from_checkpoint": true,
+    "enable_partial_candidate_export": true,
+    "checkpoint_save_interval_groups": 100,
+    "eta_log_interval_seconds": 1800
+  },
+  "inference": {
+    "backend": "api",
+    "api_profile": "openai_release_en",
+    "enable_thinking": true,
+    "think_max_new_tokens": 384,
+    "think_retry_max_new_tokens": 384,
+    "think_temperature": 0.35,
+    "think_top_p": 0.9,
+    "no_think_max_new_tokens": 256,
+    "no_think_retry_max_new_tokens": 320,
+    "no_think_temperature": 0.2,
+    "no_think_top_p": 0.8,
+    "force_no_think_retry": true,
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0,
+    "repetition_penalty": 1.05,
+    "dtype": "bfloat16",
+    "require_cuda": false,
+    "prefer_4090_order": false,
+    "force_4090_order": false,
+    "tensor_parallel_size": 1,
+    "gpu_memory_utilization": 0,
+    "max_model_len": 8192,
+    "enable_oom_split_retry": true,
+    "oom_split_retry_max_depth": 4,
+    "api_profiles": {
+      "openai_release_en": {
+        "provider": "openai",
+        "format": "responses",
+        "model": "gpt-5.4",
+        "base_url": "https://api.openai.com/v1",
+        "api_key_env": "OPENAI_API_KEY",
+        "reasoning_effort": "high",
+        "timeout_sec": 180,
+        "max_retries": 3,
+        "retry_backoff_sec": 2,
+        "max_concurrency": 4,
+        "headers": {},
+        "extra_body": {},
+        "output_namespace": "en_api"
+      }
+    },
+    "api": {
+      "profile": "openai_release_en"
+    }
+  },
+  "runtime": {
+    "phase1_language_split_inputs": {
+      "en_test": "SPAR/outputs/en_api/phase1/phase1_en_test.jsonl"
+    },
+    "require_phase1_language_split_inputs": false,
+    "default_splits": [
+      "test"
+    ],
+    "default_languages": [
+      "en"
+    ],
+    "max_samples_per_split": null,
+    "max_samples": null,
+    "progress_interval": 64,
+    "resume_from_checkpoint": true,
+    "checkpoint_save_interval_groups": 100,
+    "eta_log_interval_seconds": 1800
+  },
+  "quality": {
+    "strict": false
+  },
+  "logging": {
+    "level": "INFO"
+  }
+}

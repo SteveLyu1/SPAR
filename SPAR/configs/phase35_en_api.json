@@ -1,0 +1,32 @@
+{
+  "project_name": "spar_phase35_en_api",
+  "seed": 20260525,
+  "paths": {
+    "input_jsonl": "SPAR/outputs/en_api/phase3/latest/candidates/final_tuples.jsonl",
+    "reference_jsonl": [
+      "datasets/tbo_manual_split/cleaned_en_test.jsonl"
+    ],
+    "output_root": "SPAR/outputs/en_api/phase3.5"
+  },
+  "phase35": {
+    "name": "aggregator",
+    "dedupe_exact_tuple": false,
+    "keep_group_provenance": true,
+    "export_phase0_like": true,
+    "include_reference_ground_truth": true
+  },
+  "runtime": {
+    "default_splits": [
+      "test"
+    ],
+    "max_samples": null,
+    "progress_interval": 100
+  },
+  "quality": {
+    "strict": false,
+    "require_non_empty_tuples": true
+  },
+  "logging": {
+    "level": "INFO"
+  }
+}
