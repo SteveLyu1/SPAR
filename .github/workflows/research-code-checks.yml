@@ -1,0 +1,26 @@
+name: Research code integrity
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  static-and-interface-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile Python source
+        run: python -m compileall -q SPAR spar_hate task_adaptations tests
+      - name: Check published configuration paths
+        run: python -m spar_hate validate-release
+      - name: Run interface and release contract tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
