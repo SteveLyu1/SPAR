@@ -53,6 +53,13 @@ class ReleaseContractTests(unittest.TestCase):
     def test_prompt_references_exist(self):
         self.assertEqual(check_release(ROOT), [])
 
+    def test_nested_role_prompts_are_checked(self):
+        from spar_hate.release_check import _prompt_references
+        refs = _prompt_references({
+            "role_prompt_map": {"victim": {"en": "SPAR/prompts/example.txt"}},
+        })
+        self.assertEqual(refs, {"SPAR/prompts/example.txt"})
+
     def test_missing_config_is_detected(self):
         with tempfile.TemporaryDirectory() as d:
             errors = check_release(Path(d))
