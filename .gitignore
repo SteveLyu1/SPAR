@@ -1,0 +1,33 @@
+# Local Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environment variables and credentials
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json
+secrets.json
+
+# Locally installed model weights
+models/
+
+# Runtime-generated SPAR outputs
+SPAR/outputs/
+SPAR/logs/
+SPAR/checkpoints/
+task_adaptations/dance_hate_triplet/outputs/
+task_adaptations/synchain_hate_triplet/outputs/
+
+# Tooling artifacts
+dist/
+build/
+*.egg-info/
+*.log

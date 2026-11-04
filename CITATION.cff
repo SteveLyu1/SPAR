@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "Please cite the SPAR-Hate arXiv manuscript when using this research code."
+title: "SPAR-Hate: Research Code for Bilingual Hate Speech Parsing"
+authors:
+  - family-names: Lyu
+    given-names: Yifan
+  - family-names: Lin
+    given-names: Dianqing
+  - family-names: Li
+    given-names: Xinran
+  - family-names: Qiao
+    given-names: Jiaqi
+  - family-names: Xu
+    given-names: Xiujuan
+repository-code: "https://github.com/SteveLyu1/SPAR"
+url: "https://arxiv.org/abs/2608.22018"
+preferred-citation:
+  type: article
+  title: "SPAR-Hate: Auditor-Guided Multi-Perspective Role Reasoning for Bilingual Hate Speech Parsing"
+  authors:
+    - family-names: Lyu
+      given-names: Yifan
+    - family-names: Lin
+      given-names: Dianqing
+    - family-names: Li
+      given-names: Xinran
+    - family-names: Qiao
+      given-names: Jiaqi
+    - family-names: Xu
+      given-names: Xiujuan
+  year: 2026
+  journal: "arXiv preprint"
+  url: "https://arxiv.org/abs/2608.22018v4"
