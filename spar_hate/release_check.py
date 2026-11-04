@@ -30,6 +30,9 @@ def _prompt_references(value: object) -> set[str]:
     elif isinstance(value, list):
         for entry in value:
             results.update(_prompt_references(entry))
+    elif isinstance(value, str):
+        if value.startswith("SPAR/prompts/") and value.endswith(".txt"):
+            results.add(value)
     return results
 
 
